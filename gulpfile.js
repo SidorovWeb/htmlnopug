@@ -13,6 +13,7 @@ var gulp = require('gulp'),
   cache = require('gulp-cache'),
   replace = require('gulp-replace'),
   del = require('del'),
+  notify = require('gulp-notify'),
   plumber = require('gulp-plumber'),
   babel = require('gulp-babel')
 
@@ -53,7 +54,7 @@ gulp.task('styles', function() {
       scss({
         outputStyle: 'expanded',
         includePaths: [__dirname + '/node_modules']
-      })
+      }).on('error', notify.onError())
     )
     .pipe(concat('styles.min.css'))
     .pipe(
