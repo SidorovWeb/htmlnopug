@@ -35,3 +35,26 @@ body {
 	overflow-x: hidden;
 	color: red;
 }
+
+img {
+	display: block;
+	border: 0;
+	opacity: 0;
+	max-width: 100%;
+	height: auto;
+	object-fit: cover;
+}
+
+img:not(.initial) {
+	transition: opacity 1s;
+}
+
+img.initial,
+img.loaded,
+img.error {
+	opacity: 1;
+}
+
+img:not([src]) {
+	visibility: hidden;
+}

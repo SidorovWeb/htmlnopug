@@ -12,7 +12,9 @@ var gulp = require('gulp'),
   cheerio = require('gulp-cheerio'),
   cache = require('gulp-cache'),
   replace = require('gulp-replace'),
-  del = require('del')
+  del = require('del'),
+  plumber = require('gulp-plumber'),
+  babel = require('gulp-babel')
 
 // Local Server
 gulp.task('browser-sync', function() {
@@ -44,41 +46,63 @@ gulp.task('fonts', function() {
 
 // Custom Styles
 gulp.task('styles', function() {
-  return (
-    gulp
-      .src('app/scss/**/*.scss')
-      .pipe(
-        scss({
-          outputStyle: 'expanded',
-          includePaths: [__dirname + '/node_modules']
-        })
-      )
-      .pipe(concat('styles.min.css'))
-      .pipe(
-        autoprefixer({
-          overrideBrowserslist: ['last 10 versions']
-        })
-      )
-      // .pipe(cleancss({ level: { 1: { specialComments: 0 } } })) // Optional. Comment out when debugging
-      .pipe(gulp.dest('dist/css'))
-      .pipe(browserSync.stream())
-  )
+  return gulp
+    .src('app/scss/**/*.scss')
+    .pipe(plumber())
+    .pipe(
+      scss({
+        outputStyle: 'expanded',
+        includePaths: [__dirname + '/node_modules']
+      })
+    )
+    .pipe(concat('styles.min.css'))
+    .pipe(
+      autoprefixer({
+        overrideBrowserslist: ['last 10 versions']
+      })
+    )
+    .pipe(cleancss({ level: { 1: { specialComments: 0 } } })) // Optional. Comment out when debugging
+    .pipe(gulp.dest('dist/css'))
+    .pipe(browserSync.stream())
+})
+
+// JS
+gulp.task('common-js', function() {
+  return gulp
+    .src(['app/js/_index.js'])
+    .pipe(plumber())
+    .pipe(
+      babel({
+        presets: ['@babel/env']
+      })
+    )
+    .pipe(concat('common.min.js'))
+    .pipe(uglify())
+    .pipe(gulp.dest('app/js'))
 })
 
 // Scripts & JS Libraries
-gulp.task('scripts', function() {
-  return (
-    gulp
+
+gulp.task(
+  'scripts',
+  gulp.series(gulp.parallel('common-js'), function a() {
+    return gulp
       .src([
-        // 'node_modules/jquery/dist/jquery.min.js', // Optional jQuery plug-in (npm i --save-dev jquery)
-        'app/js/_custom.js' // Custom scripts. Always at the end
+        'node_modules/jquery/dist/jquery.min.js',
+        'node_modules/svg4everybody/dist/svg4everybody.min.js',
+        'node_modules/vanilla-lazyload/dist/lazyload.min.js',
+        'app/js/common.min.js' // Custom scripts. Always at the end
       ])
       .pipe(concat('scripts.min.js'))
-      // .pipe(uglify()) // Minify js (opt.)
+      .pipe(uglify()) // Minify js (opt.)
       .pipe(gulp.dest('dist/js'))
-      .pipe(browserSync.reload({ stream: true }))
-  )
-})
+      .pipe(
+        browserSync.reload({
+          stream: true
+        })
+      )
+  })
+)
 
 // IMG
 
